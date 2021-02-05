@@ -8,10 +8,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import be.birbbro.R;
 
@@ -20,7 +24,7 @@ public class PageFragment extends Fragment {
     private Double timestamp;
     private Bitmap bitmap;
 
-    public static PageFragment getInstance(double timestamp) {
+    public static PageFragment getInstance(Double timestamp) {
         PageFragment f = new PageFragment();
         Bundle args = new Bundle();
         args.putDouble("image_source", timestamp);
@@ -48,6 +52,11 @@ public class PageFragment extends Fragment {
         Glide.with(this /* context */)
                 .load(imagerRef)
                 .into(imageView);
+        TextView dateTime = (TextView) view.findViewById(R.id.date_time);
+        long dv = (long)(timestamp*1);// its need to be in milisecond
+        Date df = new java.util.Date(dv);
+        String dateTime_string = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(df);
+        dateTime.setText(dateTime_string);
     }
 
     @Override

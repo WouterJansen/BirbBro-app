@@ -14,7 +14,6 @@ You can find more information on the ESP32 camera system here: https://github.co
 
 #  TODO
 
-  - Show date near pictures and make overall interface pretty.
   - Create ML model that recognizes the bird species and shows it.
   
 #  Usage

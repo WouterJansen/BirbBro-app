@@ -29,6 +29,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -47,8 +48,12 @@ import com.google.firebase.storage.ListResult;
 import com.google.firebase.storage.StorageReference;
 import com.bumptech.glide.Glide;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
 
 import be.birbbro.R;
 import be.birbbro.databinding.ActivityMainBinding;
@@ -57,7 +62,7 @@ import be.birbbro.databinding.ActivityMainBinding;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
-    private static double[] latestImageTimestamps = new double[50];
+    private static Double[] latestImageTimestamps = new Double[50];
     private static ArrayList<Double> visibleImageTimestamps = new ArrayList<>();
     private ViewPager viewPager;
     private View btnNext, btnPrev;
@@ -115,7 +120,6 @@ public class MainActivity extends AppCompatActivity {
                             msg = getString(R.string.msg_subscribe_failed);
                         }
                         Log.d(TAG, msg);
-                        Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
                     }
                 });
         // [END subscribe_topics]
@@ -135,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void refreshImages(){
-        Arrays.fill(latestImageTimestamps, 0);
+        Arrays.fill(latestImageTimestamps, Double.valueOf(0));
         visibleImageTimestamps.clear();
         thumbnailsContainer.removeAllViews();
         FirebaseStorage storage = FirebaseStorage.getInstance();
@@ -151,6 +155,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                             Arrays.sort(latestImageTimestamps);
                         }
+                        Arrays.sort(latestImageTimestamps, Collections.reverseOrder());
                         setImagesData(latestImageTimestamps);
                         // init viewpager adapter and attach
                         viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager(), visibleImageTimestamps);
@@ -186,7 +191,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void setImagesData(double[] latestImageTimestamps) {
+    private void setImagesData(Double[] latestImageTimestamps) {
         for (int i = 0; i < latestImageTimestamps.length; i++) {
             if (latestImageTimestamps[i] > 0) {
                 visibleImageTimestamps.add(latestImageTimestamps[i]);
@@ -205,6 +210,14 @@ public class MainActivity extends AppCompatActivity {
                     .load(imagerRef)
                     .into(imageView);
             thumbnailsContainer.addView(imageLayout);
+            TextView date = (TextView) imageLayout.findViewById(R.id.date_thumb);
+            TextView time = (TextView) imageLayout.findViewById(R.id.time_thumb);
+            long dv = (long)(visibleImageTimestamps.get(i)*1);// its need to be in milisecond
+            Date df = new java.util.Date(dv);
+            String date_string = new SimpleDateFormat("yyyy/MM/dd").format(df);
+            String time_string = new SimpleDateFormat("HH:mm:ss").format(df);
+            date.setText(date_string);
+            time.setText(time_string);
         }
     }
 

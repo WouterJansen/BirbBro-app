@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal">
+    android:orientation="vertical">
 
     <ImageView
         android:id="@+id/img_thumb"
@@ -12,5 +12,26 @@
         android:layout_marginTop="5dp"
         android:contentDescription="@string/app_name"
         android:scaleType="centerCrop" />
+
+    <TextView
+        android:id="@+id/date_thumb"
+        android:layout_width="80dp"
+        android:layout_height="10dp"
+        android:layout_marginLeft="3dp"
+        android:gravity="center"
+        android:textSize="8sp"
+        android:text="0000/00/00"/>
+
+    <TextView
+        android:id="@+id/time_thumb"
+        android:layout_width="80dp"
+        android:layout_height="10dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginBottom="10dp"
+        android:gravity="center"
+        android:textSize="8sp"
+        android:text="00:00:00"/>
+
+
 
 </LinearLayout>
