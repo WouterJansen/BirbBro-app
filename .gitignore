@@ -101,7 +101,6 @@ lint/tmp/
 .mtj.tmp/
 
 # Package Files #
-*.jar
 *.war
 *.nar
 *.ear
@@ -115,4 +114,3 @@ hs_err_pid*
 .idea/*
 app/build/*
 app/google-services.json
-gradle.properties
