@@ -7,8 +7,7 @@
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:layout_marginBottom="20dp">
+        android:layout_gravity="center">
 
         <LinearLayout
           android:id="@+id/date_time_layout"
@@ -24,6 +23,7 @@
              android:layout_width="20dp"
              android:layout_height="20dp"
              android:layout_marginRight="3dp"
+             app:tint="@color/colorPrimary"
              android:contentDescription="@string/app_name"
              app:srcCompat="@drawable/ic_baseline_access_time_24" />
 
@@ -49,6 +49,7 @@
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:layout_marginRight="3dp"
+                app:tint="@color/colorPrimary"
                 android:contentDescription="@string/app_name"
                 app:srcCompat="@drawable/bird_icon"/>
 
