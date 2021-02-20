@@ -53,7 +53,7 @@ public class PageFragment extends Fragment {
                 .load(imagerRef)
                 .into(imageView);
         TextView dateTime = (TextView) view.findViewById(R.id.date_time);
-        long dv = (long)(timestamp*1);// its need to be in milisecond
+        long dv = (long)(timestamp*1000);// its need to be in milisecond
         Date df = new java.util.Date(dv);
         String dateTime_string = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(df);
         dateTime.setText(dateTime_string);

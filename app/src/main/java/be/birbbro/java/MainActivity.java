@@ -237,7 +237,7 @@ public class MainActivity extends AppCompatActivity {
             thumbnailsContainer.addView(imageLayout);
             TextView date = (TextView) imageLayout.findViewById(R.id.date_thumb);
             TextView time = (TextView) imageLayout.findViewById(R.id.time_thumb);
-            long dv = (long)(visibleImageTimestamps.get(i)*1);// its need to be in milisecond
+            long dv = (long)(visibleImageTimestamps.get(i)*1000);// its need to be in milisecond
             Date df = new java.util.Date(dv);
             String date_string = new SimpleDateFormat("yyyy/MM/dd").format(df);
             String time_string = new SimpleDateFormat("HH:mm:ss").format(df);
