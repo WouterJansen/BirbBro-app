@@ -19,4 +19,4 @@ You can find more information on the ESP32 camera system here: https://github.co
 ##  Usage
 
   - The app requires a `google_services.json` file within the app-folder to work. 
-  - The location of the images is hardcoded on the Firebase storage bucket to be in a `files` folder as `.jpg` images and requires `read` access on all those files. The image names need to be epoch timestamps. 
+  - The location of the images is hardcoded on the Firebase storage bucket to be in a main folder as `.jpg` images and requires `read` and `write`  on all those files. The image names need to be epoch timestamps. 

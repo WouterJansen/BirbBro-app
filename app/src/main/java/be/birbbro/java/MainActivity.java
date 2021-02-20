@@ -205,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
             View imageLayout = getLayoutInflater().inflate(R.layout.item_image, null);
             ImageView imageView = (ImageView) imageLayout.findViewById(R.id.img_thumb);
             imageView.setOnClickListener(onChangePageClickListener(i));
-            StorageReference imagerRef = storage.getReference().child("files/" + String.format("%.0f", visibleImageTimestamps.get(i)) + ".jpg");
+            StorageReference imagerRef = storage.getReference().child(String.format("%.0f", visibleImageTimestamps.get(i)) + ".jpg");
             Glide.with(this /* context */)
                     .load(imagerRef)
                     .into(imageView);

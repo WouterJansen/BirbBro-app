@@ -48,7 +48,7 @@ public class PageFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         ImageView imageView = (ImageView) view.findViewById(R.id.image);
         FirebaseStorage storage = FirebaseStorage.getInstance();
-        StorageReference imagerRef = storage.getReference().child("files/" + String.format("%.0f", timestamp) + ".jpg");
+        StorageReference imagerRef = storage.getReference().child(String.format("%.0f", timestamp) + ".jpg");
         Glide.with(this /* context */)
                 .load(imagerRef)
                 .into(imageView);
