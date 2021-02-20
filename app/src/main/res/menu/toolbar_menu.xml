@@ -7,10 +7,4 @@
         app:showAsAction="ifRoom"
         android:icon="@drawable/ic_baseline_refresh_24"
         android:title="@string/action_refresh" />
-
-    <!-- Settings, should always be in the overflow -->
-    <item android:id="@+id/action_fcm"
-        android:title="@string/action_fcm"
-        app:showAsAction="never"/>
-
 </menu>

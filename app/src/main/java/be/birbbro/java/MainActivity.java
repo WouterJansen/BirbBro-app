@@ -42,6 +42,8 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.ListResult;
@@ -124,6 +126,29 @@ public class MainActivity extends AppCompatActivity {
                 });
         // [END subscribe_topics]
 
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(new OnCompleteListener<String>() {
+                    @Override
+                    public void onComplete(@NonNull Task<String> task) {
+                        if (!task.isSuccessful()) {
+                            Log.w(TAG, "Fetching FCM registration token failed", task.getException());
+                            return;
+                        }
+
+                        // Get new FCM registration token
+                        String token = task.getResult();
+
+                        // Log and toast
+                        String msg = getString(R.string.msg_token_fmt, token);
+                        Log.d(TAG, msg);
+
+                        // Add to firebase realtime database
+                        FirebaseDatabase database = FirebaseDatabase.getInstance("https://birb-bro-default-rtdb.europe-west1.firebasedatabase.app");
+                        DatabaseReference myRef = database.getReference("fcm");
+                        myRef.child(token).setValue(token);
+                    }
+                });
+
 
         //find view by id
         viewPager = (ViewPager) findViewById(R.id.view_pager);
@@ -143,7 +168,7 @@ public class MainActivity extends AppCompatActivity {
         visibleImageTimestamps.clear();
         thumbnailsContainer.removeAllViews();
         FirebaseStorage storage = FirebaseStorage.getInstance();
-        StorageReference listRef = storage.getReference().child("files");
+        StorageReference listRef = storage.getReference();
         listRef.listAll()
                 .addOnSuccessListener(new OnSuccessListener<ListResult>() {
                     @Override
@@ -241,30 +266,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_fcm:
-                FirebaseMessaging.getInstance().getToken()
-                        .addOnCompleteListener(new OnCompleteListener<String>() {
-                            @Override
-                            public void onComplete(@NonNull Task<String> task) {
-                                if (!task.isSuccessful()) {
-                                    Log.w(TAG, "Fetching FCM registration token failed", task.getException());
-                                    return;
-                                }
-
-                                // Get new FCM registration token
-                                String token = task.getResult();
-                                ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                                ClipData clip = ClipData.newPlainText("TCM Token", token);
-                                clipboard.setPrimaryClip(clip);
-
-                                // Log and toast
-                                String msg = getString(R.string.msg_token_fmt, token);
-                                Log.d(TAG, msg);
-                                Toast.makeText(MainActivity.this, getString(R.string.msg_token_retrieved), Toast.LENGTH_LONG).show();
-                            }
-                        });
-                return true;
-
             case R.id.action_refresh:
                 refreshImages();
                 Toast.makeText(MainActivity.this, getString(R.string.msg_refresh), Toast.LENGTH_SHORT).show();
