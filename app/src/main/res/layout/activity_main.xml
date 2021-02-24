@@ -71,12 +71,8 @@
             android:layout_height="20dp"
             android:layout_marginLeft="3dp"
             android:textSize="14sp"
-            android:text="Previous visitors:"/>
+            android:text="@string/prev_visitors_title"/>
     </LinearLayout>
-
-
-
-
 
     <HorizontalScrollView
         android:layout_width="match_parent"

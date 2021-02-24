@@ -1,26 +1,10 @@
-/**
- * Copyright 2016 Google Inc. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package be.birbbro.java;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -31,31 +15,45 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.viewpager.widget.ViewPager;
-
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.ListResult;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.auth.FirebaseAuth;
 import com.bumptech.glide.Glide;
+import com.google.firebase.storage.StorageTask;
 
+import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import be.birbbro.R;
 import be.birbbro.databinding.ActivityMainBinding;
@@ -63,23 +61,78 @@ import be.birbbro.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "MainActivity";
+    private static final String TAG = "BirdBro";
     private static Double[] latestImageTimestamps = new Double[50];
     private static ArrayList<Double> visibleImageTimestamps = new ArrayList<>();
     private ViewPager viewPager;
     private View btnNext, btnPrev;
     private FragmentStatePagerAdapter viewPagerAdapter;
     private LinearLayout thumbnailsContainer;
+    private Classifier classifier;
+    private FirebaseAuth mAuth;
+    private String email = "YOUR_FIREBASE_AUTH_EMAIL";
+    private String password = "YOUR_FIREBASE_AUTH_PASSWORD";
+    private FirebaseDatabase database = FirebaseDatabase.getInstance("https://YOUR_RTDB_ID.europe-west1.firebasedatabase.app");
+    private String modelName = "YOURMODELNAME.pt";
+    private FirebaseUser user;
+    private HashMap<String, Integer> predictedImages =new HashMap<String, Integer>();
 
-
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mAuth = FirebaseAuth.getInstance();
+
+
+
         ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        //find view by id
+        viewPager = (ViewPager) findViewById(R.id.view_pager);
+        thumbnailsContainer = (LinearLayout) findViewById(R.id.container);
+        btnNext = findViewById(R.id.next);
+        btnPrev = findViewById(R.id.prev);
+
+        btnPrev.setOnClickListener(onClickListener(0));
+        btnNext.setOnClickListener(onClickListener(1));
+
+        classifier = new Classifier(Utils.assetFilePath(this, modelName));
+        if(user != null){
+            mAuth.signInWithEmailAndPassword(email, password)
+                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            if (task.isSuccessful()) {
+                                user = mAuth.getCurrentUser();
+                                startUpFirebase();
+                            } else {
+                                Log.w(TAG, getString(R.string.firebase_login_error), task.getException());
+                                Toast.makeText(MainActivity.this, getString(R.string.firebase_login_error),
+                                        Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    });
+        }else{
+            startUpFirebase();
+        }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        refreshImages();
+    }
+
+    void startUpFirebase(){
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // Create channel to show notifications.
             String channelId  = getString(R.string.default_notification_channel_id);
             String channelName = getString(R.string.default_notification_channel_name);
             NotificationManager notificationManager =
@@ -88,31 +141,11 @@ public class MainActivity extends AppCompatActivity {
                     channelName, NotificationManager.IMPORTANCE_LOW));
         }
 
-        // Find the toolbar view inside the activity layout
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.my_toolbar);
-        // Sets the Toolbar to act as the ActionBar for this Activity window.
-        // Make sure the toolbar exists in the activity and is not null
         setSupportActionBar(toolbar);
 
-        // If a notification message is tapped, any data accompanying the notification
-        // message is available in the intent extras. In this sample the launcher
-        // intent is fired when the notification is tapped, so any accompanying data would
-        // be handled here. If you want a different intent fired, set the click_action
-        // field of the notification message to the desired intent. The launcher intent
-        // is used when no click_action is specified.
-        //
-        // Handle possible data accompanying notification message.
-        // [START handle_data_extras]
-        if (getIntent().getExtras() != null) {
-            for (String key : getIntent().getExtras().keySet()) {
-                Object value = getIntent().getExtras().get(key);
-                Log.d(TAG, "Key: " + key + " Value: " + value);
-            }
-        }
-        // [END handle_data_extras]
-
         Log.d(TAG, String.valueOf(R.string.msg_subscribed));
-        // [START subscribe_topics]
         FirebaseMessaging.getInstance().subscribeToTopic(String.valueOf(R.string.default_notification_channel_name))
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
@@ -124,7 +157,6 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, msg);
                     }
                 });
-        // [END subscribe_topics]
 
         FirebaseMessaging.getInstance().getToken()
                 .addOnCompleteListener(new OnCompleteListener<String>() {
@@ -138,43 +170,69 @@ public class MainActivity extends AppCompatActivity {
                         // Get new FCM registration token
                         String token = task.getResult();
 
-                        // Log and toast
+                        // Log
                         String msg = getString(R.string.msg_token_fmt, token);
                         Log.d(TAG, msg);
 
                         // Add to firebase realtime database
-                        FirebaseDatabase database = FirebaseDatabase.getInstance("https://birb-bro-default-rtdb.europe-west1.firebasedatabase.app");
                         DatabaseReference myRef = database.getReference("fcm");
                         myRef.child(token).setValue(token);
                     }
                 });
 
+        DatabaseReference myRef = database.getReference("mlclasses");
+        ValueEventListener valueEventListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot ds : dataSnapshot.getChildren()) {
+                    Log.w(TAG, "new image class registered " + ds.getKey() + ": " + String.valueOf(ds.getValue(Integer.class)));
+                    if(!predictedImages.containsKey(ds.getKey())){
+                        predictedImages.put(ds.getKey(), ds.getValue(Integer.class));
+                    }
+                }
+            }
 
-        //find view by id
-        viewPager = (ViewPager) findViewById(R.id.view_pager);
-        thumbnailsContainer = (LinearLayout) findViewById(R.id.container);
-        btnNext = findViewById(R.id.next);
-        btnPrev = findViewById(R.id.prev);
-
-        btnPrev.setOnClickListener(onClickListener(0));
-        btnNext.setOnClickListener(onClickListener(1));
-
-        refreshImages();
-
+            @Override
+            public void onCancelled(DatabaseError databaseError) {}
+        };
+        myRef.addListenerForSingleValueEvent(valueEventListener);
     }
 
     void refreshImages(){
+
         Arrays.fill(latestImageTimestamps, Double.valueOf(0));
         visibleImageTimestamps.clear();
         thumbnailsContainer.removeAllViews();
         FirebaseStorage storage = FirebaseStorage.getInstance();
         StorageReference listRef = storage.getReference();
+        final DatabaseReference mlRef = database.getReference("mlclasses");
+
         listRef.listAll()
                 .addOnSuccessListener(new OnSuccessListener<ListResult>() {
                     @Override
                     public void onSuccess(ListResult listResult) {
                         for (StorageReference item : listResult.getItems()) {
-                            String timestamp = item.getName().substring(0, item.getName().lastIndexOf("."));
+                            final String timestamp = item.getName().substring(0, item.getName().lastIndexOf("."));
+                            if(!predictedImages.containsKey(timestamp)){
+                                FirebaseStorage storageInteral = FirebaseStorage.getInstance();
+                                StorageReference imagerRef = storageInteral.getReference().child(timestamp + ".jpg");
+                                try {
+                                    final File localFile = File.createTempFile("Images", "bmp");
+                                    OnSuccessListener<FileDownloadTask.TaskSnapshot> onSuccessListener = new OnSuccessListener< FileDownloadTask.TaskSnapshot >() {
+                                        @Override
+                                        public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                                            Bitmap currentImage = BitmapFactory.decodeFile(localFile.getAbsolutePath());
+                                            Integer classIndex = classifier.predict(currentImage);
+                                            predictedImages.put(timestamp, classIndex);
+
+                                            mlRef.child(timestamp).setValue(classIndex);
+                                        }
+                                    };
+                                    imagerRef.getFile(localFile).addOnSuccessListener(onSuccessListener);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
                             if(Double.parseDouble(timestamp) > latestImageTimestamps[0]){
                                 latestImageTimestamps[0] = Double.parseDouble(timestamp);
                             }
@@ -182,8 +240,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                         Arrays.sort(latestImageTimestamps, Collections.reverseOrder());
                         setImagesData(latestImageTimestamps);
-                        // init viewpager adapter and attach
-                        viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager(), visibleImageTimestamps);
+                        viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager(), visibleImageTimestamps, predictedImages, getString(R.string.default_class));
                         viewPager.setAdapter(viewPagerAdapter);
                         inflateThumbnails();
                     }
@@ -191,7 +248,7 @@ public class MainActivity extends AppCompatActivity {
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.d(TAG, "Could not find images on storage");
+                        Log.d(TAG, getString(R.string.no_images_error));
                     }
                 });
     }
@@ -255,10 +312,8 @@ public class MainActivity extends AppCompatActivity {
         };
     }
 
-    // Menu icons are inflated just as they were with actionbar
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.toolbar_menu, menu);
         return true;
     }
@@ -270,10 +325,7 @@ public class MainActivity extends AppCompatActivity {
                 refreshImages();
                 Toast.makeText(MainActivity.this, getString(R.string.msg_refresh), Toast.LENGTH_SHORT).show();
                 return true;
-
             default:
-                // If we got here, the user's action was not recognized.
-                // Invoke the superclass to handle it.
                 return super.onOptionsItemSelected(item);
 
         }

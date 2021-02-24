@@ -17,4 +17,10 @@
     <!-- [END fcm_default_icon_string] -->
     <string name="msg_subscribe_failed">Failed to subscribe to weather topic</string>
     <string name="fcm_message">FCM Message</string>
+    <string name="firebase_login_error">Failed to login to Firebase with email and password combination</string>
+    <string name="no_images_error">Failed to find images on Firebase</string>
+    <string name="image_not_downloaded_error">Failed to find image on Firebase: </string>
+
+    <string name="prev_visitors_title">Previous visitors:</string>
+    <string name="default_class">Very likely a birb</string>
 </resources>

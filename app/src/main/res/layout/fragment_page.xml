@@ -54,7 +54,7 @@
                 app:srcCompat="@drawable/bird_icon"/>
 
             <TextView
-                android:id="@+id/type_text"
+                android:id="@+id/class_text"
                 android:layout_width="match_parent"
                 android:layout_height="20dp"
                 android:gravity="center_vertical"

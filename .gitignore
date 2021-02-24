@@ -114,3 +114,4 @@ hs_err_pid*
 .idea/*
 app/build/*
 app/google-services.json
+/app/src/main/Assets/birbbroml_net.pt

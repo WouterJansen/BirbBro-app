@@ -23,11 +23,13 @@ public class PageFragment extends Fragment {
 
     private Double timestamp;
     private Bitmap bitmap;
+    private String className;
 
-    public static PageFragment getInstance(Double timestamp) {
+    public static PageFragment getInstance(Double timestamp, String className) {
         PageFragment f = new PageFragment();
         Bundle args = new Bundle();
         args.putDouble("image_source", timestamp);
+        args.putString("image_class", className);
         f.setArguments(args);
         return f;
     }
@@ -36,6 +38,7 @@ public class PageFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         timestamp = getArguments().getDouble("image_source");
+        className = getArguments().getString("image_class");
     }
 
     @Override
@@ -52,11 +55,13 @@ public class PageFragment extends Fragment {
         Glide.with(this /* context */)
                 .load(imagerRef)
                 .into(imageView);
-        TextView dateTime = (TextView) view.findViewById(R.id.date_time);
+        TextView dateTimeView = (TextView) view.findViewById(R.id.date_time);
         long dv = (long)(timestamp*1000);// its need to be in milisecond
         Date df = new java.util.Date(dv);
         String dateTime_string = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(df);
-        dateTime.setText(dateTime_string);
+        dateTimeView.setText(dateTime_string);
+        TextView classNameView = (TextView) view.findViewById(R.id.class_text);
+        classNameView.setText(className);
     }
 
     @Override
