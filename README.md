@@ -19,6 +19,6 @@ You can find more information on the ESP32 camera system here: https://github.co
 ##  Usage
 
   - The app requires a `google_services.json` file within the app-folder to work.   
-  - It also requires a pytorch model located in [``/app/src/main/Assets/``](/app/src/main/Assets/)   and referenced in the [`MainActivity`](app/src/main/java/be/birbbro/java/MainActivity.java) as `modelName`. the associated class names should be set in the [`Constants`](app/src/main/java/be/birbbro/java/Constants.java) file. 
+  - It also requires a pytorch model located in `/app/src/main/Assets/` and referenced in the [`MainActivity`](app/src/main/java/be/birbbro/java/MainActivity.java) as `modelName`. the associated class names should be set in the [`Constants`](app/src/main/java/be/birbbro/java/Constants.java) file. 
   - You need to fill in your Firebase authentication email and password combo in the [`MainActivity`](app/src/main/java/be/birbbro/java/MainActivity.java)  as `email` and  `password` respectively.
   - The location of the images is hardcoded on the Firebase storage bucket to be in a main folder as `.jpg` images and requires `read` and `write` on all those files. The image names need to be epoch timestamps. 
