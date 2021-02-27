@@ -4,7 +4,6 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,45 +14,37 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.viewpager.widget.ViewPager;
+
+import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.ListResult;
 import com.google.firebase.storage.StorageReference;
-import com.google.firebase.auth.FirebaseAuth;
-import com.bumptech.glide.Glide;
-import com.google.firebase.storage.StorageTask;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import be.birbbro.R;
 import be.birbbro.databinding.ActivityMainBinding;
@@ -77,7 +68,6 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseUser user;
     private HashMap<String, Integer> predictedImages =new HashMap<String, Integer>();
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -91,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
 
         //find view by id
         viewPager = (ViewPager) findViewById(R.id.view_pager);
-        thumbnailsContainer = (LinearLayout) findViewById(R.id.container);
+        thumbnailsContainer = (LinearLayout) findViewById(R.id.thumbnail_contailer);
         btnNext = findViewById(R.id.next);
         btnPrev = findViewById(R.id.prev);
 
@@ -99,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
         btnNext.setOnClickListener(onClickListener(1));
 
         classifier = new Classifier(Utils.assetFilePath(this, modelName));
-        if(user != null){
+        if(user == null){
             mAuth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                         @Override
@@ -179,23 +169,6 @@ public class MainActivity extends AppCompatActivity {
                         myRef.child(token).setValue(token);
                     }
                 });
-
-        DatabaseReference myRef = database.getReference("mlclasses");
-        ValueEventListener valueEventListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot ds : dataSnapshot.getChildren()) {
-                    Log.w(TAG, "new image class registered " + ds.getKey() + ": " + String.valueOf(ds.getValue(Integer.class)));
-                    if(!predictedImages.containsKey(ds.getKey())){
-                        predictedImages.put(ds.getKey(), ds.getValue(Integer.class));
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {}
-        };
-        myRef.addListenerForSingleValueEvent(valueEventListener);
     }
 
     void refreshImages(){
@@ -205,44 +178,54 @@ public class MainActivity extends AppCompatActivity {
         thumbnailsContainer.removeAllViews();
         FirebaseStorage storage = FirebaseStorage.getInstance();
         StorageReference listRef = storage.getReference();
-        final DatabaseReference mlRef = database.getReference("mlclasses");
-
         listRef.listAll()
                 .addOnSuccessListener(new OnSuccessListener<ListResult>() {
                     @Override
                     public void onSuccess(ListResult listResult) {
                         for (StorageReference item : listResult.getItems()) {
                             final String timestamp = item.getName().substring(0, item.getName().lastIndexOf("."));
-                            if(!predictedImages.containsKey(timestamp)){
-                                FirebaseStorage storageInteral = FirebaseStorage.getInstance();
-                                StorageReference imagerRef = storageInteral.getReference().child(timestamp + ".jpg");
-                                try {
-                                    final File localFile = File.createTempFile("Images", "bmp");
-                                    OnSuccessListener<FileDownloadTask.TaskSnapshot> onSuccessListener = new OnSuccessListener< FileDownloadTask.TaskSnapshot >() {
-                                        @Override
-                                        public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                                            Bitmap currentImage = BitmapFactory.decodeFile(localFile.getAbsolutePath());
-                                            Integer classIndex = classifier.predict(currentImage);
-                                            predictedImages.put(timestamp, classIndex);
-
-                                            mlRef.child(timestamp).setValue(classIndex);
-                                        }
-                                    };
-                                    imagerRef.getFile(localFile).addOnSuccessListener(onSuccessListener);
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                            }
                             if(Double.parseDouble(timestamp) > latestImageTimestamps[0]){
                                 latestImageTimestamps[0] = Double.parseDouble(timestamp);
                             }
                             Arrays.sort(latestImageTimestamps);
                         }
                         Arrays.sort(latestImageTimestamps, Collections.reverseOrder());
-                        setImagesData(latestImageTimestamps);
-                        viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager(), visibleImageTimestamps, predictedImages, getString(R.string.default_class));
-                        viewPager.setAdapter(viewPagerAdapter);
-                        inflateThumbnails();
+                        for (int i = 0; i < latestImageTimestamps.length; i++) {
+                            if(latestImageTimestamps[i] > 0) {
+                                final String timestamp = String.format("%.0f", latestImageTimestamps[i]);
+                                if(!predictedImages.containsKey(timestamp)){
+                                    FirebaseStorage storageInteral = FirebaseStorage.getInstance();
+                                    StorageReference imagerRef = storageInteral.getReference().child(timestamp + ".jpg");
+                                    try {
+                                        final File localFile = File.createTempFile("Images", "jpg");
+                                        final int current_index = i;
+                                        OnSuccessListener<FileDownloadTask.TaskSnapshot> onSuccessListener = new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                                            @Override
+                                            public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                                                Bitmap currentImage = BitmapFactory.decodeFile(localFile.getAbsolutePath());
+                                                Integer classIndex = classifier.predict(currentImage);
+                                                predictedImages.put(timestamp, classIndex);
+                                                if (current_index == latestImageTimestamps.length - 1) {
+                                                    inflateUI();
+                                                } else if (latestImageTimestamps[current_index + 1] == 0) {
+                                                    inflateUI();
+                                                }
+                                            }
+                                        };
+                                        imagerRef.getFile(localFile).addOnSuccessListener(onSuccessListener);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }else{
+                                    if (i == latestImageTimestamps.length - 1) {
+                                        inflateUI();
+                                    } else if (latestImageTimestamps[i + 1] == 0) {
+                                        inflateUI();
+                                    }
+                                }
+
+                            }
+                        }
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -251,6 +234,19 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, getString(R.string.no_images_error));
                     }
                 });
+    }
+
+    private void inflateUI(){
+        setImagesData(latestImageTimestamps);
+        viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager(), visibleImageTimestamps, predictedImages, getString(R.string.default_class));
+        viewPager.setAdapter(viewPagerAdapter);
+        inflateThumbnails();
+
+
+        findViewById(R.id.previous_visitors_title).setVisibility(View.VISIBLE);
+        findViewById(R.id.pager_layout).setVisibility(View.VISIBLE);
+        findViewById(R.id.loading_text).setVisibility(View.INVISIBLE);
+
     }
 
     private View.OnClickListener onClickListener(final int i) {
@@ -271,7 +267,6 @@ public class MainActivity extends AppCompatActivity {
             }
         };
     }
-
 
     private void setImagesData(Double[] latestImageTimestamps) {
         for (int i = 0; i < latestImageTimestamps.length; i++) {
