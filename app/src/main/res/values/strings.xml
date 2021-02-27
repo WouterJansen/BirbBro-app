@@ -20,7 +20,7 @@
     <string name="firebase_login_error">Failed to login to Firebase with email and password combination</string>
     <string name="no_images_error">Failed to find images on Firebase</string>
     <string name="image_not_downloaded_error">Failed to find image on Firebase: </string>
-
+    <string name="loading_text">Loading...</string>
     <string name="prev_visitors_title">Previous visitors:</string>
     <string name="default_class">Very likely a birb</string>
 </resources>
