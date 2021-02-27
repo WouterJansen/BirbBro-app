@@ -14,7 +14,7 @@ You can find more information on the ESP32 camera system here: https://github.co
 
 ##  TODO
 
-  - Fix all issues with async firebase systems. 
+  - Adapt ML model to use softmax output to provide prediction certainty percentage value to app. 
   
 ##  Usage
 
