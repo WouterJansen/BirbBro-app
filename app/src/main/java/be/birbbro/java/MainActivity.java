@@ -74,8 +74,6 @@ public class MainActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 
-
-
         ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -242,8 +240,7 @@ public class MainActivity extends AppCompatActivity {
         viewPager.setAdapter(viewPagerAdapter);
         inflateThumbnails();
 
-
-        findViewById(R.id.previous_visitors_title).setVisibility(View.VISIBLE);
+        findViewById(R.id.thubmnails_header).setVisibility(View.VISIBLE);
         findViewById(R.id.pager_layout).setVisibility(View.VISIBLE);
         findViewById(R.id.loading_text).setVisibility(View.INVISIBLE);
 
