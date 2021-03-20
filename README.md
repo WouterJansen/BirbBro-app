@@ -5,6 +5,7 @@ BirdBro is a Android application to receive notifications of your friendly bird 
 This app is connected over Google Firebase cloud to a internet-connected ESP32 camera system inside the birdfeeder to capture images and upload them to the app. 
 
 You can find more information on the ESP32 camera system here: https://github.com/WouterJansen/BirbBro-esp32
+You can find more information on the ML model here: https://github.com/WouterJansen/BirbBro-ml
 
 ##  Features
 
