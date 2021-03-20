@@ -37,6 +37,11 @@ public class ViewPagerAdapter extends FragmentStatePagerAdapter {
         return PageFragment.getInstance(timestamps.get(position), className);
     }
 
+    public String getTimestamp(int position) {
+        String key = String.format("%.0f", timestamps.get(position));
+        return key;
+    }
+
     @Override
     public int getCount() {
         return timestamps.size();

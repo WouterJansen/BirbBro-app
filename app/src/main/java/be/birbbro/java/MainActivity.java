@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
     private static ArrayList<Double> visibleImageTimestamps = new ArrayList<>();
     private ViewPager viewPager;
     private View btnNext, btnPrev;
-    private FragmentStatePagerAdapter viewPagerAdapter;
+    private ViewPagerAdapter viewPagerAdapter;
     private LinearLayout thumbnailsContainer;
     private Classifier classifier;
     private FirebaseAuth mAuth;
@@ -254,6 +254,8 @@ public class MainActivity extends AppCompatActivity {
                     //next page
                     if (viewPager.getCurrentItem() < viewPager.getAdapter().getCount() - 1) {
                         viewPager.setCurrentItem(viewPager.getCurrentItem() + 1);
+
+
                     }
                 } else {
                     //previous page
@@ -317,9 +319,32 @@ public class MainActivity extends AppCompatActivity {
                 refreshImages();
                 Toast.makeText(MainActivity.this, getString(R.string.msg_refresh), Toast.LENGTH_SHORT).show();
                 return true;
+            case R.id.action_delete:
+                deleteCurrentImage();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
 
         }
+    }
+
+    private void deleteCurrentImage() {
+        String timestamp = viewPagerAdapter.getTimestamp(viewPager.getCurrentItem());
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+        StorageReference deleteRef = storage.getReference().child(timestamp + ".jpg");
+        // Delete the file
+        deleteRef.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                Toast.makeText(MainActivity.this, getString(R.string.msg_delete), Toast.LENGTH_SHORT).show();
+                refreshImages();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Toast.makeText(MainActivity.this, getString(R.string.msg_delete_failure), Toast.LENGTH_SHORT).show();
+            }
+        });
+
     }
 }

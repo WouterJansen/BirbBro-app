@@ -1,10 +1,14 @@
 <resources>
     <string name="app_name">Birb Bro</string>
     <string name="action_fcm">Copy FCM Token</string>
-    <string name="action_refresh">Refresh Images</string>
+    <string name="action_refresh">Refresh images</string>
+    <string name="action_delete">Delete this image</string>
     <string name="msg_subscribed">Subscribed to birbs topic</string>
     <string name="msg_token_fmt" translatable="false">FCM registration Token: %s</string>
     <string name="msg_refresh">Refreshed images</string>
+    <string name="msg_delete">Deleted image</string>
+    <string name="msg_delete_failure">Failed to delete image</string>
+
     <string name="msg_token_retrieved">FCM token copied to clipboard</string>
     msg_token_retrieved
     <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
