@@ -14,13 +14,11 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.viewpager.widget.ViewPager;
-
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -36,7 +34,6 @@ import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.ListResult;
 import com.google.firebase.storage.StorageReference;
-
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -45,7 +42,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-
 import be.birbbro.R;
 import be.birbbro.databinding.ActivityMainBinding;
 
@@ -66,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseDatabase database = FirebaseDatabase.getInstance("https://YOUR_RTDB_ID.europe-west1.firebasedatabase.app");
     private String modelName = "YOURMODELNAME.pt";
     private FirebaseUser user;
-    private HashMap<String, Integer> predictedImages =new HashMap<String, Integer>();
+    private HashMap<String, ClassifierResult> predictedImages =new HashMap<String, ClassifierResult>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -201,8 +197,8 @@ public class MainActivity extends AppCompatActivity {
                                             @Override
                                             public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
                                                 Bitmap currentImage = BitmapFactory.decodeFile(localFile.getAbsolutePath());
-                                                Integer classIndex = classifier.predict(currentImage);
-                                                predictedImages.put(timestamp, classIndex);
+                                                ClassifierResult result = classifier.predict(currentImage);
+                                                predictedImages.put(timestamp, result);
                                                 if (current_index == latestImageTimestamps.length - 1) {
                                                     inflateUI();
                                                 } else if (latestImageTimestamps[current_index + 1] == 0) {

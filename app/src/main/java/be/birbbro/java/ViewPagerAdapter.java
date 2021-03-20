@@ -16,10 +16,10 @@ import be.birbbro.R;
 public class ViewPagerAdapter extends FragmentStatePagerAdapter {
 
     private List<Double> timestamps;
-    private HashMap<String, Integer> predictedImages =new HashMap<String, Integer>();
+    private HashMap<String, ClassifierResult> predictedImages =new HashMap<String, ClassifierResult>();
     String defaultClassName;
 
-    public ViewPagerAdapter(FragmentManager fm, List<Double> timestamps, HashMap<String, Integer> predictedImages, String defaultClassName) {
+    public ViewPagerAdapter(FragmentManager fm, List<Double> timestamps, HashMap<String, ClassifierResult> predictedImages, String defaultClassName) {
         super(fm);
         this.timestamps = timestamps;
         this.predictedImages = predictedImages;
@@ -30,11 +30,13 @@ public class ViewPagerAdapter extends FragmentStatePagerAdapter {
     public Fragment getItem(int position) {
         String className = defaultClassName;
         String key = String.format("%.0f", timestamps.get(position));
+        float predictionPercentage = 0;
         if(predictedImages.containsKey(key)){
-            Integer classIndex = predictedImages.get(key);
+            Integer classIndex = predictedImages.get(key).getIndex();
+            predictionPercentage = predictedImages.get(key).getPercentage();
             className = Constants.BIRBBROML_CLASSES[classIndex];
         }
-        return PageFragment.getInstance(timestamps.get(position), className);
+        return PageFragment.getInstance(timestamps.get(position), className, predictionPercentage);
     }
 
     public String getTimestamp(int position) {

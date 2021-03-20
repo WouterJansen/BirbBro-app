@@ -11,10 +11,6 @@ You can find more information on the ESP32 camera system here: https://github.co
   - Receive notifications when a new picture is taken
   - Browse all previously taken photos of your feathered friends.
   - Predict and show bird class for each image based on trained machine learning model. 
-
-##  TODO
-
-  - Adapt ML model to use softmax output to provide prediction certainty percentage value to app. 
   
 ##  Usage
 

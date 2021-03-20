@@ -24,12 +24,14 @@ public class PageFragment extends Fragment {
     private Double timestamp;
     private Bitmap bitmap;
     private String className;
+    private float predictionPercentage;
 
-    public static PageFragment getInstance(Double timestamp, String className) {
+    public static PageFragment getInstance(Double timestamp, String className, float predictionPercentage) {
         PageFragment f = new PageFragment();
         Bundle args = new Bundle();
         args.putDouble("image_source", timestamp);
         args.putString("image_class", className);
+        args.putFloat("image_predictionpercentage", predictionPercentage);
         f.setArguments(args);
         return f;
     }
@@ -39,6 +41,7 @@ public class PageFragment extends Fragment {
         super.onCreate(savedInstanceState);
         timestamp = getArguments().getDouble("image_source");
         className = getArguments().getString("image_class");
+        predictionPercentage = getArguments().getFloat("image_predictionpercentage");
     }
 
     @Override
@@ -62,6 +65,9 @@ public class PageFragment extends Fragment {
         dateTimeView.setText(dateTime_string);
         TextView classNameView = (TextView) view.findViewById(R.id.class_text);
         classNameView.setText(className);
+        if(predictionPercentage != 0){
+            classNameView.setText(className + " - " + String.format("%.02f", predictionPercentage * 100)  + "%");
+        }
     }
 
     @Override
