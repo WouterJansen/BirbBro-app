@@ -49,6 +49,7 @@ import be.birbbro.databinding.ActivityMainBinding;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "BirdBro";
+    private String storageFolder = "default";
     private static Double[] latestImageTimestamps = new Double[50];
     private static ArrayList<Double> visibleImageTimestamps = new ArrayList<>();
     private ViewPager viewPager;
@@ -159,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, msg);
 
                         // Add to firebase realtime database
-                        DatabaseReference myRef = database.getReference("fcm");
+                        DatabaseReference myRef = database.getReference(storageFolder);
                         myRef.child(token).setValue(token);
                     }
                 });
@@ -171,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
         visibleImageTimestamps.clear();
         thumbnailsContainer.removeAllViews();
         FirebaseStorage storage = FirebaseStorage.getInstance();
-        StorageReference listRef = storage.getReference();
+        StorageReference listRef = storage.getReference().child(storageFolder);
         listRef.listAll()
                 .addOnSuccessListener(new OnSuccessListener<ListResult>() {
                     @Override
@@ -189,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
                                 final String timestamp = String.format("%.0f", latestImageTimestamps[i]);
                                 if(!predictedImages.containsKey(timestamp)){
                                     FirebaseStorage storageInteral = FirebaseStorage.getInstance();
-                                    StorageReference imagerRef = storageInteral.getReference().child(timestamp + ".jpg");
+                                    StorageReference imagerRef = storageInteral.getReference().child(storageFolder + "/" + timestamp + ".jpg");
                                     try {
                                         final File localFile = File.createTempFile("Images", "jpg");
                                         final int current_index = i;
@@ -232,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void inflateUI(){
         setImagesData(latestImageTimestamps);
-        viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager(), visibleImageTimestamps, predictedImages, getString(R.string.default_class));
+        viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager(), visibleImageTimestamps, predictedImages, getString(R.string.default_class), storageFolder);
         viewPager.setAdapter(viewPagerAdapter);
         inflateThumbnails();
 
@@ -277,7 +278,7 @@ public class MainActivity extends AppCompatActivity {
             View imageLayout = getLayoutInflater().inflate(R.layout.item_image, null);
             ImageView imageView = (ImageView) imageLayout.findViewById(R.id.img_thumb);
             imageView.setOnClickListener(onChangePageClickListener(i));
-            StorageReference imagerRef = storage.getReference().child(String.format("%.0f", visibleImageTimestamps.get(i)) + ".jpg");
+            StorageReference imagerRef = storage.getReference().child(storageFolder + "/" + String.format("%.0f", visibleImageTimestamps.get(i)) + ".jpg");
             Glide.with(this /* context */)
                     .load(imagerRef)
                     .into(imageView);
@@ -327,7 +328,7 @@ public class MainActivity extends AppCompatActivity {
     private void deleteCurrentImage() {
         String timestamp = viewPagerAdapter.getTimestamp(viewPager.getCurrentItem());
         FirebaseStorage storage = FirebaseStorage.getInstance();
-        StorageReference deleteRef = storage.getReference().child(timestamp + ".jpg");
+        StorageReference deleteRef = storage.getReference().child(storageFolder + "/" + timestamp + ".jpg");
         // Delete the file
         deleteRef.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override

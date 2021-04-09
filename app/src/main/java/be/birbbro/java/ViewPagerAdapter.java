@@ -18,12 +18,14 @@ public class ViewPagerAdapter extends FragmentStatePagerAdapter {
     private List<Double> timestamps;
     private HashMap<String, ClassifierResult> predictedImages =new HashMap<String, ClassifierResult>();
     String defaultClassName;
+    String storageFolder;
 
-    public ViewPagerAdapter(FragmentManager fm, List<Double> timestamps, HashMap<String, ClassifierResult> predictedImages, String defaultClassName) {
+    public ViewPagerAdapter(FragmentManager fm, List<Double> timestamps, HashMap<String, ClassifierResult> predictedImages, String defaultClassName, String storageFolder) {
         super(fm);
         this.timestamps = timestamps;
         this.predictedImages = predictedImages;
         this.defaultClassName = defaultClassName;
+        this.storageFolder = storageFolder;
     }
 
     @Override
@@ -36,7 +38,7 @@ public class ViewPagerAdapter extends FragmentStatePagerAdapter {
             predictionPercentage = predictedImages.get(key).getPercentage();
             className = Constants.BIRBBROML_CLASSES[classIndex];
         }
-        return PageFragment.getInstance(timestamps.get(position), className, predictionPercentage);
+        return PageFragment.getInstance(timestamps.get(position), className, predictionPercentage, storageFolder);
     }
 
     public String getTimestamp(int position) {

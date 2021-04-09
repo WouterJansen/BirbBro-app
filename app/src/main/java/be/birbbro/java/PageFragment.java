@@ -25,13 +25,15 @@ public class PageFragment extends Fragment {
     private Bitmap bitmap;
     private String className;
     private float predictionPercentage;
+    private String storageFolder;
 
-    public static PageFragment getInstance(Double timestamp, String className, float predictionPercentage) {
+    public static PageFragment getInstance(Double timestamp, String className, float predictionPercentage, String storageFolder) {
         PageFragment f = new PageFragment();
         Bundle args = new Bundle();
         args.putDouble("image_source", timestamp);
         args.putString("image_class", className);
         args.putFloat("image_predictionpercentage", predictionPercentage);
+        args.putString("image_storagefolder", storageFolder);
         f.setArguments(args);
         return f;
     }
@@ -42,6 +44,7 @@ public class PageFragment extends Fragment {
         timestamp = getArguments().getDouble("image_source");
         className = getArguments().getString("image_class");
         predictionPercentage = getArguments().getFloat("image_predictionpercentage");
+        storageFolder = getArguments().getString("image_storagefolder");
     }
 
     @Override
@@ -54,7 +57,7 @@ public class PageFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         ImageView imageView = (ImageView) view.findViewById(R.id.image);
         FirebaseStorage storage = FirebaseStorage.getInstance();
-        StorageReference imagerRef = storage.getReference().child(String.format("%.0f", timestamp) + ".jpg");
+        StorageReference imagerRef = storage.getReference().child(storageFolder + "/" + String.format("%.0f", timestamp) + ".jpg");
         Glide.with(this /* context */)
                 .load(imagerRef)
                 .into(imageView);
