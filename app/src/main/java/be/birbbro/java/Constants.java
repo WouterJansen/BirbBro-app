@@ -18,7 +18,7 @@ public class Constants {
             "Blackbird",
             "House Sparrow",
             "Tree Sparrow",
-            "European Eobin",
+            "European Robin",
             "Wren",
             "Treecreeper",
             "Eurasian Nuthatch",
